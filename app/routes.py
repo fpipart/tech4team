@@ -3,6 +3,7 @@ from app import app, db
 from app.models import File
 import io
 import csv
+import pandas as pd
 
 @app.route('/')
 def index():
@@ -53,3 +54,32 @@ def uploadXlsm():
         except:
             db.session.rollback()
         return render_template('upload.html')
+
+@app.route('/resume')
+def resume():
+    df = pd.read_sql('SELECT * FROM file', db.engine)
+    print('-----------------Mesure 1-----------------')
+    countRes = df['Reservation'].value_counts()
+    print('le nombre de reservation est de:', countRes.size)
+    print('-----------------Mesure 2-----------------')
+    df['acheteur'] = df['Nom'] + '-' +df['Prenom']
+    countBuyer = df['acheteur'].value_counts()
+    print('Le nombre d\'acheteur est de :' + str(countBuyer.size))
+    print('-----------------Mesure 3-----------------')
+    dfBuyer = df[['acheteur', 'Age']].drop_duplicates('acheteur')
+    dfBuyer['Age'] = pd.to_numeric(dfBuyer['Age'])
+    meanAge = dfBuyer['Age'].mean()
+    print('L\'age moyen des acheteurs est de :', meanAge)
+    print('-----------------Mesure 4-----------------')
+    dfRepresentation = df[['Representation', 'Prix']].drop_duplicates('Representation')
+    # print('Prix de la representation :')
+    # print(dfRepresentation)
+    print('Prix moyen d\'une representation :', dfRepresentation['Prix'].mean())
+    print('-----------------Mesure 5-----------------')
+    dfBuyerTotalPrice = df.groupby(['acheteur'],as_index = False).sum()
+    dfBuyerTotalPrice = dfBuyerTotalPrice[['acheteur','Prix']]
+    # print('Prix total payé par chaque acheteur')
+    # print(dfBuyerTotalPrice)
+    print('Prix moyen payé par un acheteur')
+    print(dfBuyerTotalPrice['Prix'].mean())
+    return render_template('upload.html')

@@ -29,4 +29,4 @@ class File(db.Model):
     Sexe = db.Column(db.String(64))
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return '<User {}>'.format(self.Numero_billet)
